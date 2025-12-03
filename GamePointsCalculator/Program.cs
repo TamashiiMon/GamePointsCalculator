@@ -30,14 +30,4 @@ app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
-Player player = new Player();
-player.PreName = "Test";
-player.LastName = "Test";
-player.Points = 100;
-player.UserId = 1;
-
-DataContext.Players = new();
-
-DataContext.Players.Add(player);
-
 app.Run();

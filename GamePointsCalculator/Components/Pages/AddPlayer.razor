@@ -1,0 +1,32 @@
+@page "/addplayer"
+@using Data
+<h1>AddPlayer</h1>
+
+<EditForm Model="@_player" OnValidSubmit="@Submit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <div>
+        <label>PreName:</label>
+        <InputText @bind-Value="_player.PreName" />
+    </div>
+    <div>
+        <label>LastName:</label>
+        <InputText @bind-Value="_player.LastName" />
+    </div>
+    <div>
+        <label>Points:</label>
+        <InputNumber @bind-Value="_player.Points" />
+    </div>
+    <button type="submit">Erstellen</button>
+</EditForm>
+
+@code {
+    private Player _player = new();
+
+    private void Submit()
+    {
+        DataContext.Players.Add(_player);
+
+        _player = new();
+    }
+}
