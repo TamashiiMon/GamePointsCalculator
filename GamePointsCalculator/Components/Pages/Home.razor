@@ -1,5 +1,6 @@
 ﻿@page "/"
 @using Data
+@inject ISnackbar Snackbar
 
 <PageTitle>Home</PageTitle>
 
@@ -15,6 +16,12 @@
             <PropertyColumn Property="x => x.UserId" />
         </Columns>
     </MudDataGrid>
+    
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
+               StartIcon="@Icons.Material.Filled.Badge"
+               OnClick="@(SubmitWinner)">
+        Show winner
+    </MudButton>
 }
 else
 {
@@ -24,5 +31,27 @@ else
 
 @code {
     private List<Player> Players = DataContext.Players;
-    
+
+    private void SubmitWinner()
+    {
+        if (Players.Count == 0)
+        {
+            Snackbar.Add("No Players Found", Severity.Error);
+            return;
+        }
+
+        var maxValue = Players.Max(member => member.Points);
+
+        var highestMembers = Players.Where(m => m.Points == maxValue).ToList();
+
+        var winnerText = string.Empty;
+       
+        foreach (var highestMember in highestMembers)
+        {
+            if (string.IsNullOrEmpty(winnerText)) winnerText = highestMember.ToString();
+            else  winnerText += " & " + highestMember;
+        }
+
+        Snackbar.Add("Winner is: " + winnerText, Severity.Info);
+    }
 }
