@@ -1,5 +1,6 @@
 ﻿@page "/"
 @using Data
+@rendermode InteractiveServer
 
 <PageTitle>Home</PageTitle>
 
@@ -23,25 +24,6 @@ else
 
 
 @code {
-    private List<Player> Players => DataContext.Players;
-
-    protected override void OnInitialized()
-    {
-        DataContext.Players.Clear();
-        Player player = new Player();
-        player.PreName = "Test";
-        player.LastName = "Test";
-        player.Points = 100;
-        player.UserId = 1;
-
-        Player player2 = new Player();
-        player2.PreName = "Test2";
-        player2.LastName = "Test2";
-        player2.Points = 105;
-        player2.UserId = 1;
-        
-        DataContext.Players.Add(player);
-        DataContext.Players.Add(player2);
-    }
-
+    private List<Player> Players = DataContext.Players;
+    
 }

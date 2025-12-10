@@ -1,32 +1,63 @@
 @page "/addplayer"
 @using Data
+@rendermode InteractiveServer
+
+<PageTitle>AddPlayer</PageTitle>
+
 <h1>AddPlayer</h1>
 
-<EditForm Model="@_player" OnValidSubmit="@Submit">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
-    <div>
-        <label>PreName:</label>
-        <InputText @bind-Value="_player.PreName" />
-    </div>
-    <div>
-        <label>LastName:</label>
-        <InputText @bind-Value="_player.LastName" />
-    </div>
-    <div>
-        <label>Points:</label>
-        <InputNumber @bind-Value="_player.Points" />
-    </div>
-    <button type="submit">Erstellen</button>
+<EditForm Model="@player" OnValidSubmit="OnValidSubmit">
+    <DataAnnotationsValidator/>
+    <MudGrid>
+        <MudItem xs="12" sm="7">
+            <MudCard>
+                <MudCardContent>
+                    <MudTextField Label="First name"
+                                  @bind-Value="player.PreName" For="@(() => player.PreName)"/>
+                    <MudTextField Label="Last name" Class="mt-3"
+                                  @bind-Value="player.LastName" For="@(() => player.LastName)"/>
+                    <MudNumericField Label="Points" HelperText="Set the player Points" Class="mt-3"
+                                  @bind-Value="player.Points" For="@(() => player.Points)"/>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Register</MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+        <MudItem xs="12" sm="5">
+            <MudPaper Class="pa-4 mud-height-full">
+                <MudText Typo="Typo.subtitle2">Validation Summary</MudText>
+                @if (success)
+                {
+                    <MudText Color="Color.Success">Success</MudText>
+                }
+                else
+                {
+                    <MudText Color="@Color.Error">
+                        <ValidationSummary />
+                    </MudText>
+                }
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12">
+            <MudText Typo="Typo.body2" Align="Align.Center">
+                Fill out the form correctly to see the success message.
+            </MudText>
+        </MudItem>
+    </MudGrid>
 </EditForm>
 
 @code {
-    private Player _player = new();
+    Player player = new();
 
-    private void Submit()
+    bool success;
+    
+    private void OnValidSubmit(EditContext ctx)
     {
-        DataContext.Players.Add(_player);
+        player.UserId = DataContext.Players.Count + 1;
+        DataContext.Players.Add(player);
 
-        _player = new();
+        success = true;
+        player = new Player();
     }
 }
