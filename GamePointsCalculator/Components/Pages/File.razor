@@ -46,14 +46,14 @@
 
     private async Task DownloadCsv()
     {
-        UtilService.DownloadCSV(JS);
+        CsvService.DownloadCSV(JS);
         Snackbar.Add("CSV downloaded successfully!", Severity.Success);
     }
 
     bool isUploaded;
     private async Task UploadFiles(IBrowserFile file)
     {
-        UtilService.UploadCSV(file);
+        CsvService.UploadCSV(file);
         isUploaded = true;
         Snackbar.Add("File uploaded!", Severity.Success);
     }
