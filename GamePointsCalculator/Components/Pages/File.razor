@@ -1,0 +1,83 @@
+@page "/file"
+@using Data
+@inject ISnackbar Snackbar
+
+<PageTitle>File Management</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-6">
+    <MudPaper Elevation="4" Class="pa-6">
+        <MudText Typo="Typo.h4" Class="mb-4">Upload or Download CSV File</MudText>
+
+        <MudGrid Spacing="3">
+            <!-- Download Button -->
+            <MudItem xs="12" sm="6">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
+                           StartIcon="@Icons.Material.Filled.Download"
+                           OnClick="@(async () => await DownloadCsv())">
+                    Download CSV
+                </MudButton>
+            </MudItem>
+
+            <!-- Upload Button -->
+            <MudItem xs="12" sm="6">
+                <MudFileUpload T="IBrowserFile" FilesChanged="UploadFiles" Accept=".csv">
+                    <ActivatorContent>
+                        <MudButton Variant="Variant.Filled" Color="Color.Secondary" FullWidth="true"
+                                   StartIcon="@Icons.Material.Filled.CloudUpload">
+                            Upload CSV
+                        </MudButton>
+                    </ActivatorContent>
+                </MudFileUpload>
+            </MudItem>
+        </MudGrid>
+
+        @if (isUploaded)
+        {
+            <MudAlert Severity="Severity.Success" Class="mt-4" Elevation="0">
+                File uploaded successfully!
+            </MudAlert>
+        }
+    </MudPaper>
+</MudContainer>
+
+@code {
+    bool isUploaded = false;
+
+    [Inject] IJSRuntime JS { get; set; }
+
+    private async Task DownloadCsv()
+    {
+        var bytes = DataContext.ExportCSV();
+        var base64 = Convert.ToBase64String(bytes);
+
+        string js = $@"
+            const link = document.createElement('a');
+            link.download = 'players.csv';
+            link.href = 'data:text/csv;base64,{base64}';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        ";
+
+        await JS.InvokeVoidAsync("eval", js);
+        Snackbar.Add("CSV downloaded successfully!", Severity.Success);
+    }
+
+    private async Task UploadFiles(IBrowserFile file)
+    {
+        var buffer = new byte[file.Size];
+
+        using (var stream = file.OpenReadStream(10 * 1024 * 1024))
+        {
+            await stream.ReadAsync(buffer, 0, (int)file.Size);
+        }
+
+        var content = System.Text.Encoding.UTF8.GetString(buffer);
+        var lines = content.Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+
+        DataContext.ImportCSV(lines);
+
+        isUploaded = true;
+        Snackbar.Add($"File uploaded! {lines.Length} lines processed.", Severity.Success);
+    }
+}
