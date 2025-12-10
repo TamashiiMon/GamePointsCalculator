@@ -4,7 +4,7 @@ using DataType = Data.DataType;
 
 public class Player
 {
-    public int UserId { get; set; }
+    public string UUID { get; set; }
     
     [Required(ErrorMessage = "First name is required")]
     public string PreName { get; set; }
@@ -17,12 +17,12 @@ public class Player
 
     public Player()
     {
-        UserId = DataContext.Players.Count + 1;
+        UUID = Guid.NewGuid().ToString();
     }
     
     public string ToCSV()
     {
-        return $"{this.PreName},{this.LastName},{this.Points},{this.UserId}";
+        return $"{this.PreName},{this.LastName},{this.Points},{this.UUID}";
     }
 
 
@@ -39,7 +39,7 @@ public class Player
         player.PreName = values[preNameIndex];
         player.LastName = values[lastNameIndex];
         player.Points = int.Parse(values[pointsIndex]);
-        player.UserId = int.Parse(values[userIdIndex]);
+        player.UUID = values[userIdIndex];
         return player;
     }
 }

@@ -53,7 +53,6 @@
     
     private void OnValidSubmit(EditContext ctx)
     {
-        player.UserId = DataContext.Players.Count + 1;
         DataContext.Players.Add(player);
 
         success = true;

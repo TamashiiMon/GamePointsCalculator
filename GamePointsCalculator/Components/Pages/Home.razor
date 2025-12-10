@@ -1,4 +1,5 @@
 ﻿@page "/"
+@using Logic
 @using Data
 @inject ISnackbar Snackbar
 
@@ -13,7 +14,7 @@
             <PropertyColumn Property="x => x.PreName" />
             <PropertyColumn Property="x => x.LastName" />
             <PropertyColumn Property="x => x.Points" />
-            <PropertyColumn Property="x => x.UserId" />
+            <PropertyColumn Property="x => x.UUID" />
         </Columns>
     </MudDataGrid>
     
@@ -34,24 +35,6 @@ else
 
     private void SubmitWinner()
     {
-        if (Players.Count == 0)
-        {
-            Snackbar.Add("No Players Found", Severity.Error);
-            return;
-        }
-
-        var maxValue = Players.Max(member => member.Points);
-
-        var highestMembers = Players.Where(m => m.Points == maxValue).ToList();
-
-        var winnerText = string.Empty;
-       
-        foreach (var highestMember in highestMembers)
-        {
-            if (string.IsNullOrEmpty(winnerText)) winnerText = highestMember.ToString();
-            else  winnerText += " & " + highestMember;
-        }
-
-        Snackbar.Add("Winner is: " + winnerText, Severity.Info);
+        Snackbar.Add(UtilService.getWinner(), Severity.Info);
     }
 }
