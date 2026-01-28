@@ -1,0 +1,412 @@
+@using System.Globalization
+
+<TMPaper Elevation="3">
+    <div style="position:absolute; top:20px; right:20px;">
+
+        <MudGrid AlignItems="Center">
+            <MudItem xs="12">
+                <MudStack Direction="Row" Spacing="1" AlignItems="AlignItems.Center">
+                    <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft"
+                                   OnClick="@MovePrevious" />
+
+                    <MudText Typo="Typo.subtitle1">
+                        @MinDate.ToString("MMMM yyyy")
+                    </MudText>
+
+                    <MudIconButton Icon="@Icons.Material.Filled.ChevronRight"
+                                   OnClick="@MoveNext" />
+                </MudStack>
+            </MudItem>
+        </MudGrid>
+        
+        <MudIconButton OnClick="@ToggleOpen"
+                       Icon="@Icons.Material.Filled.Add"
+                       Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       Size="Size.Small"/>
+        <MudPopover Open="@_open"
+                    Class="px-4 pt-4"
+                    AnchorOrigin="@Origin.TopLeft"
+                    TransformOrigin="@Origin.TopRight"
+                    Style="z-index: 101;">
+            <div class="d-flex flex-column">
+                <MudText>Create New Project</MudText>
+
+                <EditForm Model="@_ganttTask" OnValidSubmit="OnValidSubmit">
+                    <DataAnnotationsValidator/>
+
+                    <MudGrid>
+                        <MudItem xs="12" sm="7">
+                            <MudCard>
+                                <MudCardContent>
+                                    <MudTextField Label="Project Name"
+                                                  @bind-Value="_ganttTask.Name"
+                                                  For="@(() => _ganttTask.Name)"/>
+
+                                    <MudDateRangePicker Label="Zeitraum"
+                                                        @bind-DateRange="_ganttTask.DateRange"/>
+
+                                    <div class="d-flex gap-4">
+                                        <MudTimePicker Label="Startzeit"
+                                                       @bind-Time="_ganttTask.StartTime"/>
+                                        <MudTimePicker Label="Endzeit"
+                                                       @bind-Time="_ganttTask.EndTime"/>
+                                    </div>
+
+                                    <MudSelect T="GanttStatus"
+                                               @bind-Value="_ganttTask.Status"
+                                               Label="Status"
+                                               Placeholder="Please select"
+                                               AdornmentIcon="@Icons.Material.Filled.Flag"
+                                               AdornmentColor="Color.Primary">
+                                        <MudSelectItem Value="GanttStatus.Planned">Planned</MudSelectItem>
+                                        <MudSelectItem Value="GanttStatus.InProgress">In Progress</MudSelectItem>
+                                        <MudSelectItem Value="GanttStatus.Done">Done</MudSelectItem>
+                                        <MudSelectItem Value="GanttStatus.Blocked">Blocked</MudSelectItem>
+                                    </MudSelect>
+
+                                    <MudCardActions>
+                                        <MudButton ButtonType="ButtonType.Submit"
+                                                   Variant="Variant.Filled"
+                                                   Color="Color.Primary"
+                                                   Class="ml-auto">
+                                            Register
+                                        </MudButton>
+                                    </MudCardActions>
+                                </MudCardContent>
+                            </MudCard>
+                        </MudItem>
+
+                        <MudItem xs="12" sm="5">
+                            <MudPaper Class="pa-4 mud-height-full">
+                                <MudText Typo="Typo.subtitle2">Validation Summary</MudText>
+
+                                @if (success)
+                                {
+                                    <MudText Color="Color.Success">Success</MudText>
+                                }
+                                else
+                                {
+                                    <MudText Color="Color.Error">
+                                        <ValidationSummary/>
+                                    </MudText>
+                                }
+                            </MudPaper>
+                        </MudItem>
+
+                        <MudItem xs="12">
+                            <MudText Typo="Typo.body2" Align="Align.Center">
+                                Fill out the form correctly to see the success message.
+                            </MudText>
+                        </MudItem>
+                    </MudGrid>
+                </EditForm>
+            </div>
+        </MudPopover>
+    </div>
+    
+    <MudGrid AlignItems="Center"
+             Class="mb-4 border-b-2 mud-border-lines-default pb-6">
+        <MudItem xs="12" sm="3">
+            <MudText Typo="Typo.h6" Color="Color.Primary">Projektplan</MudText>
+        </MudItem>
+
+        <MudItem xs="12" sm="9">
+            <div class="gantt-header-container">
+                @for (int i = 0; i <= 4; i++)
+                {
+                    var markerDate = MinDate.AddHours(TotalHours * i / 4);
+
+                    <div class="time-marker" style="left:@(i * 25)%">
+                        <MudText Typo="Typo.caption">
+                            @(Scale == GanttScale.Day
+                                ? markerDate.ToString("HH:mm")
+                                : markerDate.ToString("dd. MMM"))
+                        </MudText>
+                    </div>
+                }
+            </div>
+        </MudItem>
+    </MudGrid>
+    <MudStack Spacing="2" Class="mt-4">
+        @foreach (var task in Tasks.OrderBy(t => t.DateRange.Start))
+        {
+            <MudGrid AlignItems="Center" Class="task-row">
+                <MudItem xs="12" sm="3">
+                    <MudText Typo="Typo.body2"
+                             Class="mud-text-primary fw-bold px-2">
+                        @task.Name
+                    </MudText>
+                </MudItem>
+
+                <MudItem xs="12" sm="9" Class="py-2">
+                    <div class="gantt-timeline-track">
+                        <MudTooltip Placement="Placement.Top">
+                            <TooltipContent>
+                                <MudStack Spacing="0">
+                                    <MudText Typo="Typo.subtitle2">@task.Name</MudText>
+
+                                    <MudText Typo="Typo.body2">
+                                        @(task.DateRange.Start?.ToString("dd-MM-yyyy"))
+                                        @task.StartTime?.ToString(@"hh\:mm")
+                                        –
+                                        @(task.DateRange.Start?.ToString("dd-MM-yyyy"))
+                                        @task.EndTime?.ToString(@"hh\:mm")
+                                    </MudText>
+
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                        Status: @task.Status
+                                    </MudText>
+                                </MudStack>
+                            </TooltipContent>
+
+                            <ChildContent>
+                                <div class="gantt-bar-fancy"
+                                     style="
+                                        left:@(GetOffset(task).ToString("F2", CultureInfo.InvariantCulture))%;
+                                        width:@(GetWidth(task).ToString("F2", CultureInfo.InvariantCulture))%;
+                                        background-color:@GetColor(task);
+                                     ">
+                                    <div class="gantt-bar-glass"></div>
+                                </div>
+                            </ChildContent>
+                        </MudTooltip>
+                    </div>
+                </MudItem>
+            </MudGrid>
+        }
+        <MudSelect T="GanttScale"
+                   @bind-Value="Scale"
+                   @bind-Value:after="ResetViewStart"
+                   Label="Time to show"
+                   Placeholder="Please select"
+                   AdornmentIcon="@Icons.Material.Filled.Timer"
+                   AdornmentColor="Color.Primary">
+            <MudSelectItem Value="GanttScale.Day">Day</MudSelectItem>
+            <MudSelectItem Value="GanttScale.Month">Month</MudSelectItem>
+            <MudSelectItem Value="GanttScale.ThreeMonth">ThreeMonth</MudSelectItem>
+            <MudSelectItem Value="GanttScale.SixMonth">SixMonth</MudSelectItem>
+            <MudSelectItem Value="GanttScale.Year">Year</MudSelectItem>
+            <MudSelectItem Value="GanttScale.All">All</MudSelectItem>
+        </MudSelect>
+    </MudStack>
+</TMPaper>
+
+<style>
+    :root {
+        --gantt-track-bg: var(--mud-palette-background-grey);
+        --gantt-border: var(--mud-palette-divider);
+    }
+
+    .gantt-header-container {
+        position: relative;
+        height: 30px;
+        width: 100%;
+    }
+
+    .time-marker {
+        position: absolute;
+        transform: translateX(-50%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .gantt-timeline-track {
+        position: relative;
+        height: 36px;
+        background-color: var(--gantt-track-bg);
+        background-image: linear-gradient(to right, var(--gantt-border) 1px, transparent 1px);
+        background-size: 25% 100%;
+        border-radius: 6px;
+        border: 1px solid var(--gantt-border);
+        box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    .task-row {
+        transition: background-color 0.2s;
+        border-radius: 4px;
+    }
+
+    .task-row:hover {
+        background-color: var(--mud-palette-action-hover);
+    }
+
+    .gantt-bar-fancy {
+        position: absolute;
+        top: 6px;
+        bottom: 6px;
+        border-radius: 4px;
+        min-width: 8px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+        z-index: 2;
+        border: 1px solid rgba(0,0,0,0.1);
+    }
+
+    .gantt-bar-fancy:hover {
+        transform: scaleY(1.15);
+        filter: brightness(1.1);
+        z-index: 10;
+        cursor: pointer;
+    }
+
+    .gantt-bar-glass {
+        width: 100%;
+        height: 40%;
+        background: linear-gradient(to bottom, rgba(255,255,255,0.25) 0%, transparent 100%);
+        border-radius: 4px 4px 0 0;
+    }
+</style>
+
+@code {
+    [Parameter, EditorRequired]
+    public List<GanttTask> Tasks { get; set; } = new();
+
+    [Parameter]
+    public GanttScale Scale { get; set; } = GanttScale.Day;
+
+    [Parameter]
+    public EventCallback<List<GanttTask>> TasksListChanged { get; set; }
+    
+    DateTime ViewStart = DateTime.Today;
+    void ResetViewStart()
+    {
+        ViewStart = Scale switch
+        {
+            GanttScale.Day => DateTime.Today,
+            GanttScale.Week => DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek),
+            GanttScale.Month => new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1),
+            GanttScale.Year => new DateTime(DateTime.Today.Year, 1, 1),
+            _ => DateTime.Today
+        };
+    }
+    
+    void MovePrevious()
+    {
+        ViewStart = Scale switch
+        {
+            GanttScale.Day => ViewStart.AddDays(-1),
+            GanttScale.Week => ViewStart.AddDays(-7),
+            GanttScale.Month => ViewStart.AddMonths(-1),
+            GanttScale.ThreeMonth => ViewStart.AddMonths(-3),
+            GanttScale.SixMonth => ViewStart.AddMonths(-6),
+            GanttScale.Year => ViewStart.AddYears(-1),
+            _ => ViewStart
+        };
+    }
+
+    void MoveNext()
+    {
+        ViewStart = Scale switch
+        {
+            GanttScale.Day => ViewStart.AddDays(1),
+            GanttScale.Week => ViewStart.AddDays(7),
+            GanttScale.Month => ViewStart.AddMonths(1),
+            GanttScale.ThreeMonth => ViewStart.AddMonths(3),
+            GanttScale.SixMonth => ViewStart.AddMonths(6),
+            GanttScale.Year => ViewStart.AddYears(1),
+            _ => ViewStart
+        };
+    }
+
+    DateTime MinDate => ViewStart;
+
+    DateTime MaxDate => Scale switch
+    {
+        GanttScale.Day => ViewStart.AddDays(1),
+        GanttScale.Week => ViewStart.AddDays(7),
+        GanttScale.Month => ViewStart.AddMonths(1),
+        GanttScale.ThreeMonth => ViewStart.AddMonths(3),
+        GanttScale.SixMonth => ViewStart.AddMonths(6),
+        GanttScale.Year => ViewStart.AddYears(1),
+        _ => ViewStart.AddDays(30)
+    };
+
+
+    double TotalHours => Math.Max((MaxDate - MinDate).TotalHours, 1);
+
+    double GetOffset(GanttTask task)
+    {
+        if (task?.DateRange?.Start == null)
+            return 0;
+
+        var start = task.DateRange.Start.Value
+            .Add(task.StartTime ?? TimeSpan.Zero);
+
+        return (start - MinDate).TotalHours / TotalHours * 100;
+    }
+
+    double GetWidth(GanttTask task)
+    {
+        if (task?.DateRange?.Start == null || task?.DateRange?.End == null)
+            return 0.1;
+
+        var start = task.DateRange.Start.Value.Add(task.StartTime ?? TimeSpan.Zero);
+        var end = task.DateRange.End.Value.Add(task.EndTime ?? TimeSpan.Zero);
+        
+        if (end > MaxDate) end = MaxDate;
+        
+        return Math.Max((end - start).TotalHours / TotalHours * 100, 0.1);
+    }
+
+    string GetColor(GanttTask task) =>
+        task.Status switch
+        {
+            GanttStatus.Done => "var(--mud-palette-success)",
+            GanttStatus.InProgress => "var(--mud-palette-info)",
+            GanttStatus.Blocked => "var(--mud-palette-error)",
+            _ => "var(--mud-palette-primary)"
+        };
+
+    bool _open;
+    bool success;
+
+    GanttTask _ganttTask = new()
+    {
+        DateRange = new DateRange(DateTime.Today, DateTime.Today.AddDays(1))
+    };
+
+    void ToggleOpen() => _open = !_open;
+
+    async Task OnValidSubmit(EditContext ctx)
+    {
+        _ganttTask.DateRange ??= new DateRange(DateTime.Now, DateTime.Now.AddDays(1));
+
+        Tasks.Add(_ganttTask);
+        await TasksListChanged.InvokeAsync(Tasks);
+
+        success = true;
+        _ganttTask = new GanttTask();
+    }
+}
+
+@code {
+    public class GanttTask
+    {
+        public string Name { get; set; } = string.Empty;
+        public DateRange DateRange { get; set; } = default!;
+        public TimeSpan? StartTime { get; set; } = new(8, 0, 0);
+        public TimeSpan? EndTime { get; set; } = new(17, 0, 0);
+        public GanttStatus Status { get; set; }
+    }
+
+    public enum GanttStatus
+    {
+        Planned,
+        InProgress,
+        Done,
+        Blocked
+    }
+
+    public enum GanttScale
+    {
+        Day,
+        Week,
+        Month,
+        ThreeMonth,
+        SixMonth,
+        Year,
+        All
+    }
+}

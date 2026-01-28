@@ -1,0 +1,73 @@
+<MudPaper Elevation="Elevation" Class="pa-16 ma-2 position-relative" style="position: relative">
+    @if (InfoIcon)
+    {
+        <div style="@IconStyle">
+            <MudToggleIconButton @onclick="@ToggleOpen"
+                                 Icon="@Icon"
+                                 Color="@Color.Info"
+                                 ToggledIcon="@toggledIcon"
+                                 ToggledColor="@Color.Success"
+                                 Size="Size.Medium" />
+
+            <MudPopover Open="@_open"
+                        Class="px-4 pt-4"
+                        AnchorOrigin="@AnchorOrigin"
+                        TransformOrigin="@TransformOrigin"
+                        Style="z-index: 101;">
+                <div class="d-flex flex-column">
+                    <MudText>@InfoText</MudText>
+                    <MudButton OnClick="@ToggleOpen"
+                               Class="ml-auto mr-n3 mb-1"
+                               Color="Color.Error">
+                        Close
+                    </MudButton>
+                </div>
+            </MudPopover>
+        </div>
+
+    }
+
+    
+    @ChildContent
+</MudPaper>
+
+@code {
+    
+    [Parameter] public int Elevation { get; set; } = 4;
+    [Parameter] public bool InfoIcon { get; set; }
+    [Parameter] public string InfoText { get; set; }
+
+    [Parameter]
+    [Category(CategoryTypes.Button.Appearance)]
+    public string? Icon { get; set; } = Icons.Material.Filled.QuestionMark;
+    [Parameter] public string toggledIcon { get; set; } = Icons.Material.Filled.QuestionAnswer;
+    [Parameter] public Origin AnchorOrigin { get; set; } = Origin.TopLeft;
+    [Parameter] public Origin TransformOrigin { get; set; } = Origin.TopRight;
+    [Parameter] public Origin IconPos { get; set; } = Origin.TopRight;
+    
+    private string IconStyle => IconPos switch
+    {
+        Origin.TopLeft        => BaseStyle("top:20px; left:20px;"),
+        Origin.TopCenter      => BaseStyle("top:20px; left:50%; transform:translateX(-50%);"),
+        Origin.TopRight       => BaseStyle("top:20px; right:20px;"),
+
+        Origin.CenterLeft     => BaseStyle("top:50%; left:20px; transform:translateY(-50%);"),
+        Origin.CenterCenter   => BaseStyle("top:50%; left:50%; transform:translate(-50%, -50%);"),
+        Origin.CenterRight    => BaseStyle("top:50%; right:20px; transform:translateY(-50%);"),
+
+        Origin.BottomLeft     => BaseStyle("bottom:20px; left:20px;"),
+        Origin.BottomCenter   => BaseStyle("bottom:20px; left:50%; transform:translateX(-50%);"),
+        Origin.BottomRight    => BaseStyle("bottom:20px; right:20px;"),
+
+        _ => BaseStyle("top:20px; right:20px;")
+    };
+
+
+    private string BaseStyle(string position)
+        => $"position:absolute; width:45px; height:45px; {position}";
+    
+    private bool _open;
+    private void ToggleOpen() => _open = !_open;
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

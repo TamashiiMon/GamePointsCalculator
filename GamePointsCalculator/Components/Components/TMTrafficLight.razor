@@ -1,0 +1,126 @@
+<MudStack Row="true" Wrap="Wrap.Wrap" Spacing="4" Justify="Justify.Center">
+    @for(int i = TrefficLightCount; i >= 1; i--)
+    {
+        int currentI = i; 
+
+        <MudStack AlignItems="AlignItems.Center" Spacing="0">
+            
+            <MudText Typo="Typo.h5" Class="mb-2">
+                @(Titles.ContainsKey(currentI) ? Titles[currentI] : "Placeholder!")
+            </MudText>
+
+            <div style="min-width: 150px;">
+                <MudTimeline Class="pa-4 ma-2 position-relative" Reverse="true">
+                    
+                            <MudIconButton Icon="@Icons.Material.Filled.Add"
+                                           Variant="Variant.Filled" 
+                                           Color="@Color"
+                                           Size="Size.Small"
+                                           OnClick="@(() => onAddClick(currentI))"
+                                           Class="mt-n3 mb-5" />
+
+                    @for (int i2 = 1; i2 <= GetOverflowCount(currentI); i2++)
+                    {
+                        <MudTimelineItem Color="Color.Error" Size="Size.Small"/>
+                    }
+
+                    @for (int i3 = 6; i3 >= 1; i3--)
+                    {
+                        @if (GetVisibleItemCount(currentI) < i3)
+                        {
+                            <MudTimelineItem Color="Color.Default" Size="Size.Small"/>
+                        }
+                        else
+                        {
+                            <MudTimelineItem Color="@GetColor(i3)" Size="Size.Small"/>
+                        }
+                    }
+                    
+                            <MudIconButton Icon="@Icons.Material.Filled.Remove"
+                                           Variant="Variant.Filled" 
+                                           Color="@Color"
+                                           Size="Size.Small"
+                                           OnClick="@(() => onRemoveClick(currentI))"
+                                           Class="mb-n3" />
+
+
+                </MudTimeline>
+            </div>
+        </MudStack>
+    }
+</MudStack>
+
+
+
+@code {
+    [Parameter]
+    public int TrefficLightCount { get; set; }
+
+    [Parameter] 
+    public Dictionary<int, int> ItemCounts { get; set; } = new();
+
+    [Parameter] 
+    public EventCallback<Dictionary<int, int>> ItemCountsChanged { get; set; }
+
+    [Parameter] public Dictionary<int, string> Titles { get; set; } = new();
+
+    protected override void OnParametersSet()
+    {
+        if (Titles.Count == 0 && TrefficLightCount > 0)
+        {
+            for (int i = 1; i <= TrefficLightCount; i++)
+            {
+                Titles.TryAdd(i, "Placeholder!");
+            }
+        }
+    }
+    
+    [Parameter]
+    public Color Color { get; set; } = Color.Info;
+
+   
+
+    private int GetVisibleItemCount(int key) 
+    {
+        int count = ItemCounts.GetValueOrDefault(key, 0);
+        return Math.Min(count, 6);
+    }
+
+    private int GetOverflowCount(int key)
+    {
+        int count = ItemCounts.GetValueOrDefault(key, 0);
+        return Math.Max(0, count - 6);
+    }
+
+
+    public async Task onAddClick(int TrafficIndex)
+    {
+        if (ItemCounts.ContainsKey(TrafficIndex))
+            ItemCounts[TrafficIndex]++;
+        else
+            ItemCounts[TrafficIndex] = 1;
+
+        await ItemCountsChanged.InvokeAsync(ItemCounts);
+    }
+
+    public async Task onRemoveClick(int TrafficIndex)
+    {
+        if (ItemCounts.ContainsKey(TrafficIndex) && ItemCounts[TrafficIndex] != 0)
+            ItemCounts[TrafficIndex]--;
+        else
+            ItemCounts[TrafficIndex] = 0;
+
+        await ItemCountsChanged.InvokeAsync(ItemCounts);
+    }
+
+    private Color GetColor(int item)
+    {
+        if (item <= 2)
+            return Color.Success;
+
+        if (item <= 4)
+            return Color.Warning;
+
+        return Color.Error;
+    }
+}

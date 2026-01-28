@@ -1,0 +1,19 @@
+@page "/test"
+@using GamePointsCalculator.Components.Components
+
+<MudText Typo="Typo.h3" Class="mb-6">
+    TMPaper – Test Page
+</MudText>
+
+
+
+<TMGantt Tasks="@tasks"/>
+
+<TMPaper InfoIcon="true" InfoText="This is a test!">
+<TMTrafficLight TrefficLightCount="6"></TMTrafficLight>
+</TMPaper>
+@code {
+    List<TMGantt.GanttTask> tasks = new()
+    {
+    };
+}
